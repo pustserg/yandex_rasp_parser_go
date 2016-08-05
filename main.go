@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/PuerkitoBio/goquery"
 	"os"
 	"strings"
 )
@@ -10,11 +11,16 @@ import (
 const (
 	inputCitiesFileName  string = "cities.txt"
 	outputCitiesFileName string = "cities_out.txt"
+	outputDirectionsFileName string = "directions_out.txt"
 )
 
 func main() {
 	cities := readCities(inputCitiesFileName)
 	writeCitiesOutput(cities)
+	for _, city := range cities {
+		directions := parseCityPage(city.FullUrl())
+		writeDirectionsOutput(directions, city.Name)
+	}
 }
 
 func readCities(fileName string) []City {
@@ -54,6 +60,42 @@ func writeCitiesOutput(cities []City) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func writeDirectionsOutput(directions []Direction, cityName string) {
+	file := openOrCreateFile(outputDirectionsFileName)
+	defer file.Close()
+	_, err := file.WriteString(cityName + "\n")
+	if err != nil {
+		panic(err)
+	}
+	for _, direction := range directions {
+		_, err := file.WriteString(direction.Name + ";" + direction.Url + "\n")
+		if err != nil {
+			panic(err)
+		}
+	}
+	err = file.Sync()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func parseCityPage(url string) []Direction{
+	doc, err := goquery.NewDocument(url)
+	if err != nil {
+		panic(err)
+	}
+	directions := make([]Direction, 0)
+	doc.Find(".directions-menu__item").Each(func(i int, s *goquery.Selection) {
+		directionName := s.Text()
+		directionUrl, _ := s.Find("a").Attr("href")
+		direction := Direction{
+			directionName,
+			"https://rasp.yandex.ru/" + directionUrl}
+		directions = append(directions, direction)
+	})
+	return directions
 }
 
 func openOrCreateFile(fileName string) *os.File {

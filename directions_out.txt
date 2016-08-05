@@ -1,0 +1,13 @@
+Moscow
+Белорусское;https://rasp.yandex.ru//city/213/direction?direction=msk_bel
+Горьковское;https://rasp.yandex.ru//city/213/direction?direction=msk_gor
+Казанское;https://rasp.yandex.ru//city/213/direction?direction=msk_kaz
+Киевское;https://rasp.yandex.ru//city/213/direction?direction=msk_kiv
+Кольцевое;https://rasp.yandex.ru//city/213/direction?direction=msk_kol
+Курское;https://rasp.yandex.ru//city/213/direction?direction=msk_kur
+Ленинградское;https://rasp.yandex.ru//city/213/direction?direction=msk_len
+Московская кольцевая железная дорога (МКЖД);https://rasp.yandex.ru//city/213/direction?direction=msk_mkzd
+Павелецкое;https://rasp.yandex.ru//city/213/direction?direction=msk_pav
+Рижское;https://rasp.yandex.ru//city/213/direction?direction=msk_riz
+Савёловское;https://rasp.yandex.ru//city/213/direction?direction=msk_sav
+Ярославское;https://rasp.yandex.ru//city/213/direction?direction=msk_yar
