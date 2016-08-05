@@ -41,7 +41,7 @@ func readCities(fileName string) []City {
 }
 
 func writeCitiesOutput(cities []City) {
-	file := openOrCreateOutputFile(outputCitiesFileName)
+	file := openOrCreateFile(outputCitiesFileName)
 	defer file.Close()
 	for _, city := range cities {
 		fmt.Println(city)
@@ -56,7 +56,7 @@ func writeCitiesOutput(cities []City) {
 	}
 }
 
-func openOrCreateOutputFile(fileName string) *os.File {
+func openOrCreateFile(fileName string) *os.File {
 	_, checkError := os.Stat(fileName)
 	var file *os.File
 	var err error
