@@ -3,7 +3,7 @@ package main
 const base_url = "https://rasp.yandex.ru/city/"
 
 type City struct {
-	Name string
+	name string
 	code string
 }
 

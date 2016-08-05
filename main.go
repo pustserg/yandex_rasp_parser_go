@@ -2,24 +2,23 @@ package main
 
 import (
 	"bufio"
-	"fmt"
+	//"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"os"
 	"strings"
 )
 
 const (
-	inputCitiesFileName  string = "cities.txt"
-	outputCitiesFileName string = "cities_out.txt"
+	inputCitiesFileName      string = "cities.txt"
 	outputDirectionsFileName string = "directions_out.txt"
 )
 
 func main() {
 	cities := readCities(inputCitiesFileName)
-	writeCitiesOutput(cities)
+	//writeCitiesOutput(cities)
 	for _, city := range cities {
 		directions := parseCityPage(city.FullUrl())
-		writeDirectionsOutput(directions, city.Name)
+		writeDirectionsOutput(directions, &city)
 	}
 }
 
@@ -39,38 +38,23 @@ func readCities(fileName string) []City {
 		str := strings.Split(line, ";")
 		if len(str) > 1 {
 			name, code := str[0], str[1]
-			city := City{name, code}
+			city := City{name: name, code: code}
 			cities = append(cities, city)
 		}
 	}
 	return cities
 }
 
-func writeCitiesOutput(cities []City) {
-	file := openOrCreateFile(outputCitiesFileName)
-	defer file.Close()
-	for _, city := range cities {
-		fmt.Println(city)
-		_, err := file.WriteString(city.FullUrl() + "\n")
-		if err != nil {
-			panic(err)
-		}
-	}
-	err := file.Sync()
-	if err != nil {
-		panic(err)
-	}
-}
-
-func writeDirectionsOutput(directions []Direction, cityName string) {
+func writeDirectionsOutput(directions []Direction, city *City) {
 	file := openOrCreateFile(outputDirectionsFileName)
 	defer file.Close()
-	_, err := file.WriteString(cityName + "\n")
+	_, err := file.WriteString(city.name + "\n")
 	if err != nil {
 		panic(err)
 	}
 	for _, direction := range directions {
-		_, err := file.WriteString(direction.Name + ";" + direction.Url + "\n")
+		_, err := file.WriteString(
+			direction.name + ";" + direction.FullUrl(city) + "\n")
 		if err != nil {
 			panic(err)
 		}
@@ -81,20 +65,20 @@ func writeDirectionsOutput(directions []Direction, cityName string) {
 	}
 }
 
-func parseCityPage(url string) []Direction{
+func parseCityPage(url string) []Direction {
 	doc, err := goquery.NewDocument(url)
 	if err != nil {
 		panic(err)
 	}
 	directions := make([]Direction, 0)
-	doc.Find(".directions-menu__item").Each(func(i int, s *goquery.Selection) {
-		directionName := s.Text()
-		directionUrl, _ := s.Find("a").Attr("href")
-		direction := Direction{
-			directionName,
-			"https://rasp.yandex.ru/" + directionUrl}
-		directions = append(directions, direction)
-	})
+	doc.Find(".directions-menu__item").Each(
+		func(i int, s *goquery.Selection) {
+			directionName := s.Text()
+			directionUrl, _ := s.Find("a").Attr("href")
+			url := strings.Split(directionUrl, "?")[1]
+			direction := Direction{name: directionName, url: url}
+			directions = append(directions, direction)
+		})
 	return directions
 }
 

@@ -1,1 +1,2 @@
 Moscow;213
+Saint Petersburg;2
