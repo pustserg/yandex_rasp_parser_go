@@ -41,31 +41,32 @@ func readCities(fileName string) []City {
 }
 
 func writeCitiesOutput(cities []City) {
-	_, checkError := os.Stat(outputCitiesFileName)
+	file := openOrCreateOutputFile(outputCitiesFileName)
+	defer file.Close()
+	for _, city := range cities {
+		fmt.Println(city)
+		_, err := file.WriteString(city.FullUrl() + "\n")
+		if err != nil {
+			panic(err)
+		}
+	}
+	err := file.Sync()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func openOrCreateOutputFile(fileName string) *os.File {
+	_, checkError := os.Stat(fileName)
 	var file *os.File
 	var err error
 	if os.IsNotExist(checkError) {
-		file, err = os.Create(outputCitiesFileName)
-		if err != nil {
-			panic(err)
-		}
-		defer file.Close()
+		file, err = os.Create(fileName)
 	} else {
-		file, err = os.OpenFile(outputCitiesFileName, os.O_RDWR|os.O_APPEND, 0644)
-		if err != nil {
-			panic(err)
-		}
-		defer file.Close()
+		file, err = os.OpenFile(fileName, os.O_RDWR|os.O_APPEND, 0644)
 	}
-	for _, city := range cities {
-		fmt.Println(city)
-		_, err = file.WriteString(city.FullUrl() + "\n")
-		if err != nil {
-			panic(err)
-		}
-	}
-	syncErr := file.Sync()
-	if syncErr != nil {
+	if err != nil {
 		panic(err)
 	}
+	return file
 }
