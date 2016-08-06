@@ -11,15 +11,15 @@ import (
 const (
 	inputCitiesFileName      string = "cities.txt"
 	outputDirectionsFileName string = "directions_out.txt"
+	outputStationsFileName   string = "station_out.txt"
 )
 
 func main() {
 	cities := readCities(inputCitiesFileName)
-	//writeCitiesOutput(cities)
-	for _, city := range cities {
-		directions := parseCityPage(city.FullUrl())
-		writeDirectionsOutput(directions, &city)
-	}
+	directions := getDirectionsFromCities(&cities)
+	writeDirectionsOutput(directions)
+	stations := getStationsFromDirections(&directions)
+	writeStationsOutput(stations)
 }
 
 func readCities(fileName string) []City {
@@ -45,28 +45,56 @@ func readCities(fileName string) []City {
 	return cities
 }
 
-func writeDirectionsOutput(directions []Direction, city *City) {
+func getDirectionsFromCities(cities *[]City) []Direction {
+	directions := make([]Direction, 0)
+	for _, city := range *cities {
+		cityDirections := parseCityPage(&city)
+		directions = append(directions, cityDirections...)
+	}
+	return directions
+}
+
+func getStationsFromDirections(directions *[]Direction) []Station {
+	stations := make([]Station, 0)
+	for _, direction := range *directions {
+		directionStations := parseDirectionPage(&direction)
+		stations = append(stations, directionStations...)
+	}
+	return stations
+}
+
+func writeDirectionsOutput(directions []Direction) {
 	file := openOrCreateFile(outputDirectionsFileName)
 	defer file.Close()
-	_, err := file.WriteString(city.name + "\n")
-	if err != nil {
-		panic(err)
-	}
 	for _, direction := range directions {
-		_, err := file.WriteString(
-			direction.name + ";" + direction.FullUrl(city) + "\n")
+		_, err := file.WriteString(direction.ToString() + "\n")
 		if err != nil {
 			panic(err)
 		}
 	}
-	err = file.Sync()
+	err := file.Sync()
 	if err != nil {
 		panic(err)
 	}
 }
 
-func parseCityPage(url string) []Direction {
-	doc, err := goquery.NewDocument(url)
+func writeStationsOutput(stations []Station) {
+	file := openOrCreateFile(outputStationsFileName)
+	defer file.Close()
+	for _, station := range stations {
+		_, err := file.WriteString(station.ToString() + "\n")
+		if err != nil {
+			panic(err)
+		}
+	}
+	err := file.Sync()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func parseCityPage(city *City) []Direction {
+	doc, err := goquery.NewDocument(city.FullUrl())
 	if err != nil {
 		panic(err)
 	}
@@ -76,10 +104,33 @@ func parseCityPage(url string) []Direction {
 			directionName := s.Text()
 			directionUrl, _ := s.Find("a").Attr("href")
 			url := strings.Split(directionUrl, "?")[1]
-			direction := Direction{name: directionName, url: url}
+			direction := Direction{name: directionName, url: url, city: *city}
 			directions = append(directions, direction)
 		})
 	return directions
+}
+
+func parseDirectionPage(direction *Direction) []Station {
+	doc, err := goquery.NewDocument(direction.FullUrl())
+	if err != nil {
+		panic(err)
+	}
+	stations := make([]Station, 0)
+	doc.Find(".b-scheme__station").Each(
+		func(i int, s *goquery.Selection) {
+			stationName := s.Find("a").Text()
+			stationUrl, _ := s.Find("a").Attr("href")
+			if len(stationName) > 0 && len(stationUrl) > 0 {
+				urlWithotQuery := strings.Split(stationUrl, "?")[0]
+				stationCode := strings.Split(urlWithotQuery, "/")[2]
+				station := Station{
+					name:      stationName,
+					code:      stationCode,
+					direction: *direction}
+				stations = append(stations, station)
+			}
+		})
+	return stations
 }
 
 func openOrCreateFile(fileName string) *os.File {

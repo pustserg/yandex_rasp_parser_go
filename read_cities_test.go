@@ -10,4 +10,3 @@ func TestReadCities(t *testing.T) {
 		t.Error("Expected", expected, "got", city)
 	}
 }
-
