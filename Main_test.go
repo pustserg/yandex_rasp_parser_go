@@ -6,7 +6,6 @@ import "testing"
 //PASS
 //1	16794929234 ns/op
 //ok  	rasp_parser	16.814s
-import "testing"
 
 func BenchmarkMain(b *testing.B)  {
 	for n:=0; n < b.N; n++ {
